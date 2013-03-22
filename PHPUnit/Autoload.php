@@ -42,12 +42,34 @@
  * @since      File available since Release 3.5.0
  */
 
+if (defined('PHPUNIT_COMPOSER_INSTALL')) {
+    return;
+}
+
+$paths = array(
+  __DIR__ . '/../vendor',
+  __DIR__ . '/../../..'
+);
+
+foreach ($paths as $path) {
+    if (is_dir($path . '/composer') &&
+        is_file($path . '/autoload.php')) {
+        require_once $path . '/autoload.php';
+        define('PHPUNIT_COMPOSER_INSTALL', $path . '/autoload.php');
+
+        return;
+    }
+}
+
 require_once 'File/Iterator/Autoload.php';
 require_once 'PHP/CodeCoverage/Autoload.php';
 require_once 'PHP/Timer/Autoload.php';
 require_once 'PHPUnit/Framework/MockObject/Autoload.php';
 require_once 'Text/Template/Autoload.php';
 require_once 'SebastianBergmann/Version/src/autoload.php';
+require_once 'SebastianBergmann/Diff/autoload.php';
+require_once 'SebastianBergmann/Exporter/autoload.php';
+require_once 'SebastianBergmann/Version/autoload.php';
 
 spl_autoload_register(
   function ($class)
@@ -66,6 +88,7 @@ spl_autoload_register(
             'phpunit_extensions_ticketlistener' => '/Extensions/TicketListener.php',
             'phpunit_framework_assert' => '/Framework/Assert.php',
             'phpunit_framework_assertionfailederror' => '/Framework/AssertionFailedError.php',
+            'phpunit_framework_basetestlistener' => '/Framework/BaseTestListener.php',
             'phpunit_framework_comparator' => '/Framework/Comparator.php',
             'phpunit_framework_comparator_array' => '/Framework/Comparator/Array.php',
             'phpunit_framework_comparator_domdocument' => '/Framework/Comparator/DOMDocument.php',
@@ -157,7 +180,6 @@ spl_autoload_register(
             'phpunit_util_configuration' => '/Util/Configuration.php',
             'phpunit_util_deprecatedfeature' => '/Util/DeprecatedFeature.php',
             'phpunit_util_deprecatedfeature_logger' => '/Util/DeprecatedFeature/Logger.php',
-            'phpunit_util_diff' => '/Util/Diff.php',
             'phpunit_util_errorhandler' => '/Util/ErrorHandler.php',
             'phpunit_util_fileloader' => '/Util/Fileloader.php',
             'phpunit_util_filesystem' => '/Util/Filesystem.php',
@@ -180,7 +202,6 @@ spl_autoload_register(
             'phpunit_util_testdox_resultprinter_text' => '/Util/TestDox/ResultPrinter/Text.php',
             'phpunit_util_testsuiteiterator' => '/Util/TestSuiteIterator.php',
             'phpunit_util_type' => '/Util/Type.php',
-            'phpunit_util_type_exportcontext' => '/Util/Type/ExportContext.php',
             'phpunit_util_xml' => '/Util/XML.php'
           );
 
@@ -191,6 +212,26 @@ spl_autoload_register(
 
       if (isset($classes[$cn])) {
           require $path . $classes[$cn];
+      }
+  }
+);
+
+// Symfony Yaml autoloader
+spl_autoload_register(
+  function ($class) {
+      if (0 === strpos(ltrim($class, '/'), 'Symfony\Component\Yaml')) {
+          $file = sprintf(
+            'Symfony/Component/Yaml%s.php',
+
+            substr(
+              str_replace('\\', '/', $class),
+              strlen('Symfony\Component\Yaml')
+            )
+          );
+
+          if (stream_resolve_include_path($file)) {
+              require_once $file;
+          }
       }
   }
 );

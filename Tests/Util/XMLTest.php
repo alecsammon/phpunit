@@ -320,4 +320,39 @@ class Util_XMLTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($tag, $converted);
     }
+
+    /**
+     * @dataProvider charProvider
+     */
+    public function testPrepareString($char)
+    {
+        $e = null;
+
+        $escapedString = PHPUnit_Util_XML::prepareString($char);
+        $xml = "<?xml version='1.0' encoding='UTF-8' ?><tag>$escapedString</tag>";
+        $dom = new DomDocument('1.0', 'UTF-8');
+
+        try {
+            $dom->loadXML($xml);
+        }
+
+        catch (Exception $e) {
+        }
+
+        $this->assertNull($e, sprintf(
+          'PHPUnit_Util_XML::prepareString("\x%02x") should not crash DomDocument',
+          ord($char)
+        ));
+    }
+
+    public function charProvider()
+    {
+        $data = array();
+
+        for ($i = 0; $i < 256; $i++) {
+            $data[] = array(chr($i));
+        }
+
+        return $data;
+    }
 }

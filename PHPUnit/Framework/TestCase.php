@@ -196,6 +196,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
     private $required = array(
         'PHP' => NULL,
         'PHPUnit' => NULL,
+        'OS' => NULL,
         'functions' => array(),
         'extensions' => array()
     );
@@ -415,6 +416,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
     /**
      * @param string $expectedRegex
      * @since Method available since Release 3.6.0
+     * @throws PHPUnit_Framework_Exception
      */
     public function expectOutputRegex($expectedRegex)
     {
@@ -570,6 +572,10 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
                 $this->required['PHPUnit'] = $requirements['PHPUnit'];
             }
 
+            if (isset($requirements['OS'])) {
+                $this->required['OS'] = $requirements['OS'];
+            }
+
             if (isset($requirements['extensions'])) {
                 $this->required['extensions'] = $requirements['extensions'];
             }
@@ -606,6 +612,14 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
             $missingRequirements[] = sprintf(
               'PHPUnit %s (or later) is required.',
               $this->required['PHPUnit']
+            );
+        }
+
+        if ($this->required['OS'] &&
+            !preg_match($this->required['OS'], PHP_OS)) {
+            $missingRequirements[] = sprintf(
+              'Operating system matching %s is required.',
+              $this->required['OS']
             );
         }
 
@@ -743,6 +757,12 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
                 $strict = 'FALSE';
             }
 
+            if (defined('PHPUNIT_COMPOSER_INSTALL')) {
+                $composerAutoload = var_export(PHPUNIT_COMPOSER_INSTALL, TRUE);
+            } else {
+                $composerAutoload = '\'\'';
+            }
+
             $data            = var_export(serialize($this->data), TRUE);
             $dependencyInput = var_export(serialize($this->dependencyInput), TRUE);
             $includePath     = var_export(get_include_path(), TRUE);
@@ -754,6 +774,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
 
             $template->setVar(
               array(
+                'composerAutoload'               => $composerAutoload,
                 'filename'                       => $class->getFileName(),
                 'className'                      => $class->getName(),
                 'methodName'                     => $this->name,
@@ -953,6 +974,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
      * Override to run the test and assert its state.
      *
      * @return mixed
+     * @throws Exception|PHPUnit_Framework_Exception
      * @throws PHPUnit_Framework_Exception
      */
     protected function runTest()
@@ -1412,10 +1434,11 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
      * @param  string  $mockClassName
      * @param  array   $methods
      * @param  boolean $callOriginalConstructor
+     * @param  array   $options An array of options passed to SOAPClient::_construct
      * @return PHPUnit_Framework_MockObject_MockObject
      * @since  Method available since Release 3.4.0
      */
-    protected function getMockFromWsdl($wsdlFile, $originalClassName = '', $mockClassName = '', array $methods = array(), $callOriginalConstructor = TRUE)
+    protected function getMockFromWsdl($wsdlFile, $originalClassName = '', $mockClassName = '', array $methods = array(), $callOriginalConstructor = TRUE, array $options = array())
     {
         if ($originalClassName === '') {
             $originalClassName = str_replace(
@@ -1426,7 +1449,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
         if (!class_exists($originalClassName)) {
           eval(
             $this->mockObjectGenerator->generateClassFromWsdl(
-              $wsdlFile, $originalClassName, $methods
+              $wsdlFile, $originalClassName, $methods, $options
             )
           );
         }
@@ -1434,7 +1457,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
         return $this->getMock(
           $originalClassName,
           $methods,
-          array('', array()),
+          array('', $options),
           $mockClassName,
           $callOriginalConstructor,
           FALSE,
@@ -1676,8 +1699,6 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
     }
 
     /**
-     *
-     *
      * @param  mixed $value, ...
      * @return PHPUnit_Framework_MockObject_Stub_ConsecutiveCalls
      * @since  Method available since Release 3.0.0
@@ -1906,6 +1927,7 @@ abstract class PHPUnit_Framework_TestCase extends PHPUnit_Framework_Assert imple
      *
      * @param Exception $e
      * @since Method available since Release 3.4.0
+     * @throws Exception
      */
     protected function onNotSuccessfulTest(Exception $e)
     {

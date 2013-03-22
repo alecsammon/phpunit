@@ -45,6 +45,7 @@
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'ClassWithNonPublicAttributes.php';
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'TestIterator.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'DummyException.php';
 
 /**
  *
@@ -1870,57 +1871,6 @@ EOF
     }
 
     /**
-     * @covers PHPUnit_Framework_Constraint_Callback
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Specified callback <invalid callback> is not callable.
-     */
-    public function testConstraintCallbackInvalidFunctionArgument()
-    {
-        PHPUnit_Framework_Assert::callback('invalid callback');
-    }
-
-    /**
-     * @covers PHPUnit_Framework_Constraint_Callback
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Specified callback <empty array> is not callable.
-     */
-    public function testConstraintCallbackInvalidArrayArgumentWithEmptyArray()
-    {
-        PHPUnit_Framework_Assert::callback(array());
-    }
-
-    /**
-     * @covers PHPUnit_Framework_Constraint_Callback
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Specified callback <array without indexes 0 and 1 set> is not callable.
-     */
-    public function testConstraintCallbackInvalidArrayArgumentWithBadArray()
-    {
-        PHPUnit_Framework_Assert::callback(array(3 => 'foo'));
-    }
-
-
-    /**
-     * @covers PHPUnit_Framework_Constraint_Callback
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Specified callback <Framework_ConstraintTest::invalid callback> is not callable.
-     */
-    public function testConstraintCallbackInvalidArrayArgumentWithObject()
-    {
-        PHPUnit_Framework_Assert::callback(array($this, 'invalid callback'));
-    }
-
-    /**
-     * @covers PHPUnit_Framework_Constraint_Callback
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Specified callback <Framework_ConstraintTest::invalid callback> is not callable.
-     */
-    public function testConstraintCallbackInvalidArrayArgumentWithClassname()
-    {
-        PHPUnit_Framework_Assert::callback(array('Framework_ConstraintTest', 'invalid callback'));
-    }
-
-    /**
      * @covers PHPUnit_Framework_Constraint_IsEqual
      * @covers PHPUnit_Framework_Constraint_LessThan
      * @covers PHPUnit_Framework_Constraint_Or
@@ -3123,6 +3073,24 @@ EOF
 
     /**
      * @covers PHPUnit_Framework_Constraint_TraversableContains
+     */
+    public function testConstraintArrayContainsCheckForObjectIdentity()
+    {
+        // Check for primitive type.
+        $constraint = new PHPUnit_Framework_Constraint_TraversableContains('foo', TRUE, TRUE);
+
+        $this->assertFalse($constraint->evaluate(array(0), '', TRUE));
+        $this->assertFalse($constraint->evaluate(array(TRUE), '', TRUE));
+
+        // Default case.
+        $constraint = new PHPUnit_Framework_Constraint_TraversableContains('foo');
+
+        $this->assertTrue($constraint->evaluate(array(0), '', TRUE));
+        $this->assertTrue($constraint->evaluate(array(TRUE), '', TRUE));
+    }
+
+    /**
+     * @covers PHPUnit_Framework_Constraint_TraversableContains
      * @covers PHPUnit_Framework_Constraint_Not
      * @covers PHPUnit_Framework_Assert::logicalNot
      * @covers PHPUnit_Framework_TestFailure::exceptionToString
@@ -3551,6 +3519,37 @@ Failed asserting that actual size 2 does not match expected size 2.
 EOF
               ,
               PHPUnit_Framework_TestFailure::exceptionToString($e)
+            );
+
+            return;
+        }
+
+        $this->fail();
+    }
+
+    /**
+     * @covers PHPUnit_Framework_Constraint_Exception
+     * @covers PHPUnit_Framework_TestFailure::exceptionToString
+     */
+    public function testConstraintException()
+    {
+        $constraint = new PHPUnit_Framework_Constraint_Exception('FoobarException');
+        $exception = new DummyException('Test');
+        $stackTrace = $exception->getTraceAsString();
+
+        try {
+            $constraint->evaluate($exception);
+        }
+
+        catch (PHPUnit_Framework_ExpectationFailedException $e) {
+            $this->assertEquals(
+              <<<EOF
+Failed asserting that exception of type "DummyException" matches expected exception "FoobarException". Message was: "Test" at
+$stackTrace.
+
+EOF
+                ,
+                PHPUnit_Framework_TestFailure::exceptionToString($e)
             );
 
             return;

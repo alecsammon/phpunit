@@ -152,6 +152,25 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
 
         $this->fail();
     }
+
+    /**
+     * @covers PHPUnit_Framework_Assert::assertContains
+     */
+    public function testAssertArrayContainsNonObject()
+    {
+        $this->assertContains('foo', array(TRUE));
+
+        try {
+            $this->assertContains('foo', array(TRUE), '', FALSE, TRUE, TRUE);
+        }
+
+        catch (PHPUnit_Framework_AssertionFailedError $e) {
+            return;
+        }
+
+        $this->fail();
+    }
+
     /**
      * @covers PHPUnit_Framework_Assert::assertContainsOnlyInstancesOf
      */
@@ -434,6 +453,24 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
 
         try {
             $this->assertNotContains('foo', array('foo'));
+        }
+
+        catch (PHPUnit_Framework_AssertionFailedError $e) {
+            return;
+        }
+
+        $this->fail();
+    }
+
+    /**
+     * @covers PHPUnit_Framework_Assert::assertNotContains
+     */
+    public function testAssertArrayNotContainsNonObject()
+    {
+        $this->assertNotContains('foo', array(TRUE), '', FALSE, TRUE, TRUE);
+
+        try {
+            $this->assertNotContains('foo', array(TRUE));
         }
 
         catch (PHPUnit_Framework_AssertionFailedError $e) {
@@ -1709,6 +1746,17 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     {
         $this->readAttribute(NULL, 'foo');
     }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::readAttribute
+     * @covers            PHPUnit_Framework_Assert::getStaticAttribute
+     * @covers            PHPUnit_Framework_Assert::getObjectAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testReadAttributeIfAttributeNameIsNotValid()
+    {
+        $this->readAttribute('StdClass', '2');
+    }
 
     /**
      * @covers PHPUnit_Framework_Assert::assertAttributeContains
@@ -1861,6 +1909,46 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
 
         try {
             $this->assertAttributeNotContains('baz', 'privateArray', $obj);
+        }
+
+        catch (PHPUnit_Framework_AssertionFailedError $e) {
+            return;
+        }
+
+        $this->fail();
+    }
+
+    /**
+     * @covers PHPUnit_Framework_Assert::assertAttributeContains
+     */
+    public function testAssertAttributeContainsNonObject()
+    {
+        $obj = new ClassWithNonPublicAttributes;
+
+        $this->assertAttributeContains(TRUE, 'privateArray', $obj);
+
+        try {
+            $this->assertAttributeContains(TRUE, 'privateArray', $obj, '', FALSE, TRUE, TRUE);
+        }
+
+        catch (PHPUnit_Framework_AssertionFailedError $e) {
+            return;
+        }
+
+        $this->fail();
+    }
+
+    /**
+     * @covers PHPUnit_Framework_Assert::assertAttributeNotContains
+     */
+    public function testAssertAttributeNotContainsNonObject()
+    {
+        $obj = new ClassWithNonPublicAttributes;
+
+        $this->assertAttributeNotContains(TRUE, 'privateArray', $obj, '', FALSE, TRUE, TRUE);
+
+        try {
+            $this->assertAttributeNotContains(TRUE, 'privateArray', $obj);
         }
 
         catch (PHPUnit_Framework_AssertionFailedError $e) {
@@ -2155,6 +2243,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     {
         $this->assertClassHasAttribute('foo', NULL);
     }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertClassHasAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertClassHasAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertClassHasAttribute('1', 'ClassWithNonPublicAttributes');
+    }
 
     /**
      * @covers            PHPUnit_Framework_Assert::assertClassNotHasAttribute
@@ -2172,6 +2269,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     public function testAssertClassNotHasAttributeThrowsException2()
     {
         $this->assertClassNotHasAttribute('foo', NULL);
+    }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertClassNotHasAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertClassNotHasAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertClassNotHasAttribute('1', 'ClassWithNonPublicAttributes');
     }
 
     /**
@@ -2191,6 +2297,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     {
         $this->assertClassHasStaticAttribute('foo', NULL);
     }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertClassHasStaticAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertClassHasStaticAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertClassHasStaticAttribute('1', 'ClassWithNonPublicAttributes');
+    }
 
     /**
      * @covers            PHPUnit_Framework_Assert::assertClassNotHasStaticAttribute
@@ -2208,6 +2323,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     public function testAssertClassNotHasStaticAttributeThrowsException2()
     {
         $this->assertClassNotHasStaticAttribute('foo', NULL);
+    }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertClassNotHasStaticAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertClassNotHasStaticAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertClassNotHasStaticAttribute('1', 'ClassWithNonPublicAttributes');
     }
 
     /**
@@ -2227,6 +2351,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     {
         $this->assertObjectHasAttribute('foo', NULL);
     }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertObjectHasAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertObjectHasAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertObjectHasAttribute('1', 'ClassWithNonPublicAttributes');
+    }
 
     /**
      * @covers            PHPUnit_Framework_Assert::assertObjectNotHasAttribute
@@ -2244,6 +2377,15 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
     public function testAssertObjectNotHasAttributeThrowsException2()
     {
         $this->assertObjectNotHasAttribute('foo', NULL);
+    }
+    
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertObjectNotHasAttribute
+     * @expectedException PHPUnit_Framework_Exception
+     */
+    public function testAssertObjectNotHasAttributeThrowsExceptionIfAttributeNameIsNotValid()
+    {
+        $this->assertObjectNotHasAttribute('1', 'ClassWithNonPublicAttributes');
     }
 
     /**
@@ -2844,6 +2986,29 @@ class Framework_AssertTest extends PHPUnit_Framework_TestCase
                          'content' => 'regexp:/asdf/');
         $this->assertTag($matcher, $this->html);
     }
+
+    /**
+     * @covers PHPUnit_Framework_Assert::assertTag
+     */
+    public function testAssertTagCdataContentTrue()
+    {
+        $matcher = array('tag' => 'script',
+                         'content' => 'alert(\'Hello, world!\');');
+        $this->assertTag($matcher, $this->html);
+    }
+
+    /**
+     * @covers            PHPUnit_Framework_Assert::assertTag
+     * @expectedException PHPUnit_Framework_AssertionFailedError
+     */
+    public function testAssertTagCdataontentFalse()
+    {
+        $matcher = array('tag' => 'script',
+                         'content' => 'asdf');
+        $this->assertTag($matcher, $this->html);
+    }
+
+
 
     /**
      * @covers PHPUnit_Framework_Assert::assertTag
